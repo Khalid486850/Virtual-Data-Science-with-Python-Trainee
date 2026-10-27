@@ -1,0 +1,178 @@
+import numpy as np
+import torch
+
+from torch import nn
+
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import (
+    accuracy_score,
+    classification_report
+)
+
+# Reproducibility
+torch.manual_seed(42)
+np.random.seed(42)
+
+# Load dataset
+iris = load_iris()
+
+X = iris.data
+y = iris.target
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.20,
+    stratify=y,
+    random_state=42
+)
+
+# Standardization
+scaler = StandardScaler()
+
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Training-validation split
+X_train, X_val, y_train, y_val = train_test_split(
+    X_train,
+    y_train,
+    test_size=0.20,
+    stratify=y_train,
+    random_state=42
+)
+
+# Convert to tensors
+X_train_tensor = torch.tensor(
+    X_train,
+    dtype=torch.float32
+)
+
+y_train_tensor = torch.tensor(
+    y_train,
+    dtype=torch.long
+)
+
+X_val_tensor = torch.tensor(
+    X_val,
+    dtype=torch.float32
+)
+
+y_val_tensor = torch.tensor(
+    y_val,
+    dtype=torch.long
+)
+
+X_test_tensor = torch.tensor(
+    X_test,
+    dtype=torch.float32
+)
+
+# Neural Network
+model = nn.Sequential(
+
+    nn.Linear(4, 16),
+
+    nn.ReLU(),
+
+    nn.Dropout(0.15),
+
+    nn.Linear(16, 8),
+
+    nn.ReLU(),
+
+    nn.Linear(8, 3)
+)
+
+# Loss function
+criterion = nn.CrossEntropyLoss()
+
+# Optimizer
+optimizer = torch.optim.Adam(
+    model.parameters(),
+    lr=0.008,
+    weight_decay=0.001
+)
+
+# Training
+epochs = 150
+
+for epoch in range(epochs):
+
+    model.train()
+
+    optimizer.zero_grad()
+
+    predictions = model(
+        X_train_tensor
+    )
+
+    loss = criterion(
+        predictions,
+        y_train_tensor
+    )
+
+    loss.backward()
+
+    optimizer.step()
+
+    # Validation
+    if (epoch + 1) % 10 == 0:
+
+        model.eval()
+
+        with torch.no_grad():
+
+            validation_predictions = model(
+                X_val_tensor
+            )
+
+            validation_loss = criterion(
+                validation_predictions,
+                y_val_tensor
+            )
+
+        print(
+            f"Epoch {epoch + 1}, "
+            f"Training Loss: {loss.item():.4f}, "
+            f"Validation Loss: {validation_loss.item():.4f}"
+        )
+
+# Test model
+model.eval()
+
+with torch.no_grad():
+
+    test_output = model(
+        X_test_tensor
+    )
+
+    predicted_classes = test_output.argmax(
+        dim=1
+    ).numpy()
+
+accuracy = accuracy_score(
+    y_test,
+    predicted_classes
+)
+
+print("\nTest Accuracy:", accuracy)
+
+print(
+    classification_report(
+        y_test,
+        predicted_classes,
+        target_names=iris.target_names
+    )
+)
+
+# Save model
+torch.save(
+    model.state_dict(),
+    "iris_neural_network.pth"
+)
+
+print("\nDeep learning model completed successfully.")
