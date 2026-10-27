@@ -1,0 +1,70 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.datasets import load_iris
+
+# Load dataset
+iris = load_iris(as_frame=True)
+df = iris.frame.copy()
+
+df["species"] = df["target"].map(
+    dict(enumerate(iris.target_names))
+)
+
+print("Dataset Shape:", df.shape)
+
+print("\nStatistical Summary:")
+print(df.describe())
+
+print("\nMissing Values:")
+print(df.isnull().sum())
+
+# Histograms
+df[iris.feature_names].hist(figsize=(10, 7))
+
+plt.suptitle("Distribution of Iris Features")
+plt.tight_layout()
+plt.show()
+
+# Scatter plot
+sns.scatterplot(
+    data=df,
+    x="petal length (cm)",
+    y="petal width (cm)",
+    hue="species"
+)
+
+plt.title("Petal Length vs Petal Width")
+plt.show()
+
+# Box plot
+plt.figure(figsize=(8, 5))
+
+sns.boxplot(
+    data=df,
+    x="species",
+    y="sepal width (cm)"
+)
+
+plt.title("Sepal Width by Species")
+plt.show()
+
+# Correlation matrix
+correlation = df[iris.feature_names].corr()
+
+print("\nCorrelation Matrix:")
+print(correlation)
+
+plt.figure(figsize=(8, 6))
+
+sns.heatmap(
+    correlation,
+    annot=True,
+    cmap="coolwarm",
+    fmt=".2f"
+)
+
+plt.title("Feature Correlation Heatmap")
+plt.show()
+
+print("\nExploratory Data Analysis completed successfully.")
