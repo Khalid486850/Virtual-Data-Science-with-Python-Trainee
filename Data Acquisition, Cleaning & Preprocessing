@@ -1,0 +1,57 @@
+import pandas as pd
+from sklearn.datasets import load_iris
+
+# Load public Iris dataset
+iris = load_iris(as_frame=True)
+df = iris.frame.copy()
+
+# Rename columns
+df.columns = [
+    "sepal_length_cm",
+    "sepal_width_cm",
+    "petal_length_cm",
+    "petal_width_cm",
+    "species"
+]
+
+print("Dataset Shape:", df.shape)
+print("\nFirst 5 Rows:")
+print(df.head())
+
+# Missing values
+print("\nMissing Values:")
+print(df.isnull().sum())
+
+# Duplicate records
+print("\nDuplicate Rows:", df.duplicated().sum())
+
+# Statistical summary
+print("\nStatistical Summary:")
+print(df.describe())
+
+# Outlier detection using IQR
+features = df.columns[:4]
+
+for column in features:
+    Q1 = df[column].quantile(0.25)
+    Q3 = df[column].quantile(0.75)
+    IQR = Q3 - Q1
+
+    lower_limit = Q1 - 1.5 * IQR
+    upper_limit = Q3 + 1.5 * IQR
+
+    outliers = df[
+        (df[column] < lower_limit) |
+        (df[column] > upper_limit)
+    ]
+
+    print(f"{column}: {len(outliers)} potential outliers")
+
+# Validate measurements
+assert (df[features] > 0).all().all()
+
+# Save cleaned dataset
+df.to_csv("cleaned_iris.csv", index=False)
+
+print("\nData preprocessing completed successfully.")
+print("Cleaned dataset saved as cleaned_iris.csv")
